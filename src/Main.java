@@ -1,5 +1,8 @@
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
 
 public class Main {
     public static void main(String[] args) {
@@ -41,33 +44,33 @@ public class Main {
 //
 //      Пример пустой коллекции пользователей
 //
-        List<User> usersEmpty = List.of();
+        List<User> usersEmpty = Collections.emptyList();
 //
 //      Проверка работоспособности трех методов на непустой коллекции
 //
-        User userOldestFoundBySorting = userOldFoundBySorting(users);
+        User userOldestFoundBySorting = getOldestUserBySorting(users);
         System.out.println(userOldestFoundBySorting);
         System.out.println();
 
-        User userOldestFoundWithoutSorting = userOldFoundWithoutSorting(users);
+        User userOldestFoundWithoutSorting = getOldestUserWithoutSorting(users);
         System.out.println(userOldestFoundWithoutSorting);
         System.out.println();
 
-        List<User> usersOldestFound = usersOldFound(users);
+        List<User> usersOldestFound = findAllOldestUsers(users);
         System.out.println(usersOldestFound);
         System.out.println();
 //
 //      Проверка работоспособности трех методов на пустой коллекции
 //
-        User userOldestFoundBySortingEmpty = userOldFoundBySorting(usersEmpty);
+        User userOldestFoundBySortingEmpty = getOldestUserBySorting(usersEmpty);
         System.out.println(userOldestFoundBySortingEmpty);
         System.out.println();
 
-        User userOldestFoundWithoutSortingEmpty = userOldFoundWithoutSorting(usersEmpty);
+        User userOldestFoundWithoutSortingEmpty = getOldestUserWithoutSorting(usersEmpty);
         System.out.println(userOldestFoundWithoutSortingEmpty);
         System.out.println();
 
-        List<User> usersOldestFoundEmpty = usersOldFound(usersEmpty);
+        List<User> usersOldestFoundEmpty = findAllOldestUsers(usersEmpty);
         System.out.println(usersOldestFoundEmpty);
         System.out.println();
     }
@@ -77,42 +80,35 @@ public class Main {
      * с удалением дублей
      * и сортировкой коллекции
      */
-    public static User userOldFoundBySorting(List<User> users) {
-        User userEmpty = new User("", 0);
+    public static User getOldestUserBySorting(List<User> users) {
         return users.stream()
                 .distinct()
-                .sorted(Comparator.comparing(User::getAge)
-                        .thenComparing(User::getName)
-                        .reversed())
-                .findFirst().orElse(userEmpty);
+                .sorted(Comparator.comparingInt(User::getAge).reversed().thenComparing(User::getName))
+                .findFirst()
+                .orElse(null);
     }
 
     /**
      * Поиск одного из самых старых пользователей
      * без сортировки коллекции
      */
-    public static User userOldFoundWithoutSorting(List<User> users) {
-        User userEmpty = new User("", 0);
+    public static User getOldestUserWithoutSorting(List<User> users) {
         return users.stream()
-                .max(Comparator.comparing(User::getAge))
-                .orElse(userEmpty);
+                .max(Comparator.comparingInt(User::getAge))
+                .orElse(null);
     }
 
     /**
      * Поиск всех самых старых пользователей
      */
-    public static List<User> usersOldFound(List<User> users) {
-        List<User> usersEmpty = List.of();
-        int userMaxAge = userOldFoundWithoutSorting(users).getAge();
-        if (userMaxAge == 0) {
-            return usersEmpty;
-        } else {
-            return users.stream()
-                    .distinct()
-                    .filter((u) -> u.getAge() == userMaxAge)
-                    .sorted(Comparator.comparing(User::getName))
-                    .toList();
-        }
+    public static List<User> findAllOldestUsers(List<User> users) {
+        return users.stream()
+                .distinct()
+                .sorted(Comparator.comparingInt(User::getAge).reversed().thenComparing(User::getName))
+                .collect(Collectors.groupingBy(User::getAge, LinkedHashMap::new, Collectors.toList()))
+                .values().stream()
+                .findFirst()
+                .orElse(Collections.emptyList());
     }
 
 }
